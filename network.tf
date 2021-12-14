@@ -178,3 +178,35 @@ resource "aws_network_acl_rule" "egress-secure-zone-rules" {
   from_port      = 0
   to_port        = 65535
 }
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Environment = var.environment
+    Name        = "igw-${var.environment}"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Environment = var.environment
+    Name        = "rt-public-${var.environment}"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  for_each = {
+    for subnet in local.public_nested_config : "${subnet.name}" => subnet
+  }
+
+  subnet_id      = aws_subnet.public[each.value.name].id
+  route_table_id = aws_route_table.public.id
+}
