@@ -52,7 +52,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_network_acl" "eks-external-zone" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id     = aws_vpc.vpc.id
   subnet_ids = [aws_subnet.public["public-eks-1"].id, aws_subnet.public["public-eks-2"].id]
 
   tags = {
@@ -84,7 +84,7 @@ resource "aws_network_acl_rule" "eks-egress-external-zone-rules" {
 }
 
 resource "aws_network_acl" "eks-internal-zone" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id     = aws_vpc.vpc.id
   subnet_ids = [aws_subnet.private["private-eks-1"].id, aws_subnet.private["private-eks-2"].id]
 
   tags = {
@@ -113,4 +113,68 @@ resource "aws_network_acl_rule" "eks-egress-internal-zole-rules" {
   cidr_block     = "0.0.0.0/0"
   from_port      = 0
   to_port        = 0
+}
+
+resource "aws_network_acl" "rds-external-zone" {
+  vpc_id     = aws_vpc.vpc.id
+  subnet_ids =  [aws_subnet.public["public-rds-1"].id, aws_subnet.public["public-rds-2"].id]
+
+  tags = {
+    Name        = "rds-external-zole-${var.environment}" 
+    Environment = var.environment
+  }
+}
+
+resource "aws_network_acl_rule" "rds-ingress-external-zone-rules" {
+  for_each = {
+    for subnet in local.nacl_ingress_rds_external_zone_infos : "${subnet.priority}" => subnet
+  }
+
+  network_acl_id = aws_network_acl.rds-external-zone.id
+  rule_number = each.value.priority
+  rule_action = "allow"
+  egress      = false
+  protocol    = "tcp"
+  cidr_block  = each.value.cidr_block
+  from_port   = each.value.from_port
+  to_port     = each.value.to_port
+}
+
+resource "aws_network_acl" "rds-secure-zone" {
+  vpc_id     = aws_vpc.vpc.id
+  subnet_ids = [aws_subnet.private["private-rds-1"].id, aws_subnet.private["private-rds-2"].id]
+
+  tags = {
+    Name        = "rds-secure-zone-${var.environment}"
+    Environment = var.environment
+  }
+}
+
+resource "aws_network_acl_rule" "ingress-secure-zone-rules" {
+  for_each  = {
+    for subnet in local.nacl_secure_ingress_egress_infos : "${subnet.priority}" => subnet
+  }
+
+  network_acl_id = aws_network_acl.rds-secure-zone.id
+  rule_number    = each.value.priority
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = each.value.cidr_block
+  from_port      = each.value.from_port
+  to_port        = each.value.to_port
+}
+
+resource "aws_network_acl_rule" "egress-secure-zone-rules" {
+  for_each  = {
+    for subnet in local.nacl_secure_ingress_egress_infos : "${subnet.priority}" => subnet
+  }
+  network_acl_id = aws_network_acl.rds-secure-zone.id
+  rule_number    = each.value.priority
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = each.value.cidr_block
+  from_port      = 0
+  to_port        = 65535
 }

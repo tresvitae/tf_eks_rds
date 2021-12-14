@@ -100,12 +100,85 @@ locals {
     public_nested_config = flatten([
         for name, config in var.public_network_config : [
             {
-                name                    = name
-                cidr_block              = config.cidr_block
-                az                      = config.az
-                nat_gw                  = config.nat_gw
-                eks                     = config.eks
+                name       = name
+                cidr_block = config.cidr_block
+                az         = config.az
+                nat_gw     = config.nat_gw
+                eks        = config.eks
             }
         ]
     ])
+}
+
+variable "db_port" {
+  type = number
+}
+
+variable "internal_ip_range" {
+  type = string
+}
+
+# NACL external zone rules for RDS
+locals {
+  nacl_ingress_rds_external_zone_infos = flatten([{
+      cidr_block = var.internal_ip_range
+      priority   = 100
+      from_port  = var.db_port
+      to_port    = var.db_port
+  },{
+      cidr_block = aws_subnet.private["private-rds-1"].cidr_block
+      priority   = 101
+      from_port  = 0
+      to_port    = 65535
+  },{
+      cidr_block = aws_subnet.private["private-rds-2"].cidr_block
+      priority   = 102
+      from_port  = 0
+      to_port    = 65535
+  },{
+      cidr_block = aws_subnet.public["public-rds-1"].cidr_block
+      priority   = 103
+      from_port  = 0
+      to_port    = 65535
+  },{
+      cidr_block = aws_subnet.public["public-rds-2"].cidr_block
+      priority   = 104
+      from_port  = 0 
+      to_port    = 65535
+  }])
+}
+
+# NACL secure zone rules for RDS
+locals {
+  nacl_secure_ingress_egress_infos = flatten([{
+      cidr_block = aws_subnet.private["private-eks-1"].cidr_block
+      priority   = 101
+      from_port  = var.db_port
+      to_port    = var.db_port
+  },{
+      cidr_block = aws_subnet.private["private-eks-2"].cidr_block
+      priority   = 102
+      from_port  = var.db_port
+      to_port    = var.db_port
+  },{
+      cidr_block = aws_subnet.private["private-rds-1"].cidr_block
+      priority   = 103
+      from_port  = 0
+      to_port    = 65535
+  },{
+      cidr_block = aws_subnet.private["private-rds-2"].cidr_block
+      priority   = 104
+      from_port  = 0
+      to_port    = 65535
+  },{
+      cidr_block = aws_subnet.public["public-rds-1"].cidr_block
+      priority   = 105
+      from_port  = 0
+      to_port    = 65535
+  },{
+      cidr_block = aws_subnet.public["public-rds-2"].cidr_block
+      priority   = 106
+      from_port  = 0
+      to_port    = 65535
+  }]) 
 }
