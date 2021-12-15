@@ -41,8 +41,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Environment = var.environment
-    Name        = "${each.value.name}-${var.environment}"
+    Environment              = var.environment
+    Name                     = "${each.value.name}-${var.environment}"
     "kubernetes.io/role.elb" = each.value.eks ? "1" : ""
   }
 
@@ -131,15 +131,25 @@ resource "aws_network_acl_rule" "rds-ingress-external-zone-rules" {
   }
 
   network_acl_id = aws_network_acl.rds-external-zone.id
-  rule_number = each.value.priority
-  rule_action = "allow"
-  egress      = false
-  protocol    = "tcp"
-  cidr_block  = each.value.cidr_block
-  from_port   = each.value.from_port
-  to_port     = each.value.to_port
+  rule_number    = each.value.priority
+  rule_action    = "allow"
+  egress         = false
+  protocol       = "tcp"
+  cidr_block     = each.value.cidr_block
+  from_port      = each.value.from_port
+  to_port        = each.value.to_port
 }
 
+resource "aws_network_acl_rule" "rds-egress-external-zone-rules" {
+  network_acl_id = aws_network_acl.rds-external-zone.id
+  rule_number    = 100
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 65535
+}
 resource "aws_network_acl" "rds-secure-zone" {
   vpc_id     = aws_vpc.vpc.id
   subnet_ids = [aws_subnet.private["private-rds-1"].id, aws_subnet.private["private-rds-2"].id]
