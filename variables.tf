@@ -194,3 +194,7 @@ variable "username" {
 variable "password" {
   type = string
 }
+
+locals {
+    subnet_id = aws_subnet.public["public-rds-1"].availability_zone == aws_db_instance.postgresql.availability_zone ? aws_subnet.public["public-rds-1"].id : aws_subnet.public["public-rds-2"].id
+}
