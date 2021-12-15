@@ -85,3 +85,28 @@ resource "aws_iam_role_policy" "lambda_logging" {
     ]
   })
 }
+
+resource "aws_cloudwatch_log_group" "lambda" {
+  name              = "/aws/lambda/${aws_lambda_function.rds.function_name}"
+  retention_in_days = 1
+}
+
+resource "aws_cloudwatch_event_rule" "lambda" {
+  name                = "populate-nlb-tg-with-rds-private-ip"
+  description         = "Populate NLB tg with RDS private IP"
+  schedule_expression = "rate(15 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "lambda" {
+  rule      = aws_cloudwatch_event_rule.lambda.name
+  target_id = "Lambda"
+  arn       = aws_lambda_function.rds.arn
+}
+
+resource "aws_lambda_permission" "cloudwatch" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.rds.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lambda.arn
+}
