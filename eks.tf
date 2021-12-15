@@ -10,7 +10,7 @@ resource "aws_eks_cluster" "eks" {
       subnet_ids              = [aws_subnet.private["private-eks-1"].id, aws_subnet.private["private-eks-2"].id, aws_subnet.public["public-eks-1"].id, aws_subnet.public["public-eks-2"].id]
     }
 
-    enabled_cluster_log_types = ["api", "audit", "authentication", "controlManager", "scheduler"]
+    enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
     depends_on = [
         aws_iam_role_policy_attachment.eks-AmazonEKSClusterPolicy,
@@ -47,6 +47,12 @@ resource "aws_iam_role_policy_attachment" "eks-AmazonEKSClusterPolicy" {
   role       = aws_iam_role.eks.name
 }
 
+# Enable Security Groups for Pods
+resource "aws_iam_role_policy_attachment" "eks-AmazonEKSVPCResourceController" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  role       = aws_iam_role.eks.name
+}
+
 resource "aws_iam_role_policy_attachment" "eks-AmazonEKSServicePolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
   role       = aws_iam_role.eks.name  
@@ -58,10 +64,10 @@ resource "aws_security_group" "eks_cluster" {
   vpc_id      = aws_vpc.vpc.id
 
   egress {
-      from_port  = 0
-      to_port    = 0
-      protocol   = "-1"
-      cidr_block = ["0.0.0.0/0"]
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
