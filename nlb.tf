@@ -39,16 +39,16 @@ resource "aws_lb_target_group" "nlb-tg" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds-access" {
-  alarm_name           = "rds-external-access-status"
-  comparison_operation = "GreaterThanOrEqualToThreshold"
-  evaluation_periods   = "1"
-  metric_name          = "UnHealthyHostCount"
-  namespace            = "AWS/NetworkELB"
-  period               = "60"
-  statistic            = "Maximum"
-  threshold            = 1
-  alarm_descrption     = "Monitoring RDS External Access"
-  treat_mission_data   = "breaching"
+  alarm_name          = "rds-external-access-status"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "UnHealthyHostCount"
+  namespace           = "AWS/NetworkELB"
+  period              = "60"
+  statistic           = "Maximum"
+  threshold           = 1
+  alarm_description   = "Monitoring RDS External Access"
+  treat_missing_data  = "breaching"
 
   dimensions = {
     TargetGroup  = aws_lb_target_group.nlb-tg.arn_suffix
