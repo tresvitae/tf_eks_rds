@@ -17,3 +17,7 @@ output "rds-username" {
 output "rds-password" {
     value = var.password
 }
+
+output "public-rds-endpoint" {
+    value = "${element(split("/", aws_lb.nlb.arn), 2)}-${element(split("/", aws_lb.nlb.arn), 3)}.elb.${var.region}.amazonaws.com"
+}
