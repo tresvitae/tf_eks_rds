@@ -1,0 +1,87 @@
+resource "aws_lambda_function" "rds" {
+  filename      = "lambda_function_payload.zip"
+  function_name = "populate-nlb-tg-with-rds-private-ip"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "populate-nlb-tg-with-rds-private-ip.handler"
+
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  runtime = "python3.8"
+
+  timeout = 300
+
+  environment {
+    variables = {
+      RDS_PORT   = var.db_port
+      NLB_TG_ARN = aws_lb_target_group.nlb-tg.arn
+      RDS_SG_ID  = aws_security_group.sg.id
+      RDS_ID     = aws_db_instance.postgresql.id
+    }
+  }
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name = "iam_for_lambda"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "lambda_nlb" {
+  name = "nlb-tg-access"
+  role = aws_iam_role.iam_for_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+            "ec2:DescribeNetworkInterfaces",
+            "elasticloadbalancing:DeregisterTargets",
+            "elasticloadbalancing:DescribeTargetHealth",
+            "elasticloadbalancing:RegisterTargets",
+            "rds:DescribeDBInstances"
+        ]
+        Effect = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "lambda_logging" {
+  name = "lambda_logging"
+  role = aws_iam_role.iam_for_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ]
+        Effect = "Allow"
+        Resource = "arn:aws:logs:*:*:*"
+      },
+    ]
+  })
+}

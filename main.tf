@@ -9,3 +9,11 @@ terraform {
         }
   }
 }
+
+data "aws_caller_identity" "current" {}
+
+data "archive_file" "lambda_zip" {
+    type          = "zip"
+    source_file   = "${path.module}/populate-nlb-tg-with-rds-private-ip.py"
+    output_path   = "lambda_function_payload.zip"
+}
