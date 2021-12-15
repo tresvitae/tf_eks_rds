@@ -4,7 +4,7 @@ resource "random_string" "db_suffix" {
   upper   = false
 }
 
-resource "aws_db_instance" " postgresql" {
+resource "aws_db_instance" "postgresql" {
   username                            = var.username
   password                            = var.password
   # Settings
@@ -22,7 +22,7 @@ resource "aws_db_instance" " postgresql" {
 
   publicly_accessible                 = false
   vpc_security_group_ids              = [aws_security_group.sg.id]
-  port                                = var.rds_port
+  port                                = var.db_port
   # Availability
   multi_az                            = true
   # Encryption
@@ -62,7 +62,7 @@ resource "aws_security_group" "sg" {
   description = "Allow inbound/outbound traffic"
   vpc_id      = aws_vpc.vpc.id
 
-  ingres {
+  ingress {
     from_port   = var.db_port
     to_port     = var.db_port
     protocol    = "tcp"
