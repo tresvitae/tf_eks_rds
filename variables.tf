@@ -186,3 +186,11 @@ locals {
 variable "eks_cluster_name" {
   type = string
 }
+
+variable "username" {
+  type = string
+}
+
+variable "password" {
+  type = string
+}
