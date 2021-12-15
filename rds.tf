@@ -56,3 +56,71 @@ resource "aws_db_subnet_group" "sg" {
     Name        = "postgresql-${var.environment}"
   }
 }
+
+resource "aws_security_group" "sg" {
+  name        = "postgresql-${var.environment}"
+  description = "Allow inbound/outbound traffic"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingres {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.private["private-rds-1"].cidr_block]
+  }
+
+  ingress {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.private["private-rds-2"].cidr_block]
+  }
+
+  ingress {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public["public-rds-1"].cidr_block]  
+  }
+
+  ingress {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public["public-rds-2"].cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.private["private-rds-1"].cidr_block]
+  }
+
+  
+  egress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.private["private-rds-2"].cidr_block]  
+  }
+
+  egress {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public["public-rds-1"].cidr_block]  
+  }
+
+  egress {
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public["public-rds-2"].cidr_block]  
+  }
+
+  tags = {
+    Name        = "postgresql-${var.environment}"
+    Environment = var.environment
+  }
+}
