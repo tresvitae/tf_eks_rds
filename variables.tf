@@ -182,3 +182,7 @@ locals {
       to_port    = 65535
   }]) 
 }
+
+variable "eks_cluster_name" {
+  type = string
+}

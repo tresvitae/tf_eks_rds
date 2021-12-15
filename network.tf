@@ -150,6 +150,7 @@ resource "aws_network_acl_rule" "rds-egress-external-zone-rules" {
   from_port      = 0
   to_port        = 65535
 }
+
 resource "aws_network_acl" "rds-secure-zone" {
   vpc_id     = aws_vpc.vpc.id
   subnet_ids = [aws_subnet.private["private-rds-1"].id, aws_subnet.private["private-rds-2"].id]
