@@ -21,3 +21,11 @@ output "rds-password" {
 output "public-rds-endpoint" {
     value = "${element(split("/", aws_lb.nlb.arn), 2)}-${element(split("/", aws_lb.nlb.arn), 3)}.elb.${var.region}.amazonaws.com"
 }
+
+output "sg-eks-cluster" {
+    value = aws_eks_cluster.eks.vpc_config[0].cluster_security_group_id
+}
+
+output "sg-rds-access" {
+    value = aws_security_group.rds_access.id
+}
