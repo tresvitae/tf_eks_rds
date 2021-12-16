@@ -118,6 +118,21 @@ resource "aws_security_group" "sg" {
     cidr_blocks = [aws_subnet.public["public-rds-2"].cidr_block]  
   }
 
+# Allow the pod to access the RDS
+  ingress {
+    from_port       = var.db_port
+    to_port         = var.db_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.rds_access.id]
+  }
+
+  egress {
+    from_port       = 1025
+    to_port         = 65535
+    protocol        = "tcp"
+    security_groups = [aws_security_group.rds_access.id]
+  }
+
   tags = {
     Name        = "postgresql-${var.environment}"
     Environment = var.environment
