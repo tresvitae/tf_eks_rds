@@ -9,10 +9,10 @@ resource "aws_db_instance" "postgresql" {
   password                            = var.password
   # Settings
   engine                              = "postgres"
-  engine_version                      = "13.3"
+  engine_version                      = "12.5"
   name                                = "postgresql${var.environment}"
   identifier                          = "postgresql-${var.environment}"
-  instance_class                      = "db.t3.micro"
+  instance_class                      = "db.m5.large"
   # Storage
   storage_type                        = "gp2"
   allocated_storage                   = 100
@@ -97,7 +97,6 @@ resource "aws_security_group" "sg" {
     cidr_blocks = [aws_subnet.private["private-rds-1"].cidr_block]
   }
 
-  
   egress {
     from_port   = 0
     to_port     = 65535
